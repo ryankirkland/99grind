@@ -33,6 +33,8 @@ export default async function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 rounded-full bg-zinc-900 px-3 py-1 border border-zinc-800 hover:bg-zinc-800 transition-colors">
             <Link href="/profile" className="flex items-center gap-2">
+              <span className="text-sm font-medium text-zinc-300">{profile?.username}</span>
+              <span className="text-zinc-700">•</span>
               <Trophy className="h-4 w-4 text-yellow-500" />
               <span className="text-sm font-medium text-white">Lvl {profile?.level || 1}</span>
             </Link>
