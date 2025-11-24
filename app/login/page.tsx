@@ -21,14 +21,14 @@ export default function LoginPage({
                     <div className="space-y-2">
                         <label
                             className="text-xs font-medium uppercase tracking-wider text-zinc-500 group-focus-within:text-emerald-400 transition-colors"
-                            htmlFor="email"
+                            htmlFor="username"
                         >
-                            Email
+                            Username
                         </label>
                         <input
                             className="w-full rounded-lg border border-zinc-800 bg-black/50 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
-                            name="email"
-                            placeholder="you@example.com"
+                            name="username"
+                            placeholder="warrior99"
                             required
                         />
                     </div>
@@ -36,14 +36,14 @@ export default function LoginPage({
                     <div className="space-y-2">
                         <label
                             className="text-xs font-medium uppercase tracking-wider text-zinc-500 group-focus-within:text-emerald-400 transition-colors"
-                            htmlFor="username"
+                            htmlFor="email"
                         >
-                            Username (Signup only)
+                            Email (Signup only)
                         </label>
                         <input
                             className="w-full rounded-lg border border-zinc-800 bg-black/50 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
-                            name="username"
-                            placeholder="warrior99"
+                            name="email"
+                            placeholder="you@example.com"
                         />
                     </div>
 

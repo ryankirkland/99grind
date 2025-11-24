@@ -7,18 +7,27 @@ import { createClient } from '@/utils/supabase/server'
 export async function login(formData: FormData) {
     const supabase = await createClient()
 
-    // Type-casting here for convenience
-    // In production you might want to validate the inputs more strictly
-    const email = formData.get('email') as string
+    const username = formData.get('username') as string
     const password = formData.get('password') as string
 
+    // 1. Lookup email from username
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', username)
+        .single()
+
+    if (!profile || !profile.email) {
+        return redirect('/login?message=Invalid username or password')
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: profile.email,
         password,
     })
 
     if (error) {
-        return redirect('/login?message=Could not authenticate user')
+        return redirect('/login?message=Invalid username or password')
     }
 
     revalidatePath('/', 'layout')
