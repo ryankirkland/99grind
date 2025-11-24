@@ -63,7 +63,10 @@ export default async function ProfilePage() {
                         )}
                     </div>
 
-                    <form action={updateProfile} className="w-full rounded-xl bg-zinc-900/50 p-4 border border-zinc-800">
+                    <form action={async (formData) => {
+                        'use server'
+                        await updateProfile(formData)
+                    }} className="w-full rounded-xl bg-zinc-900/50 p-4 border border-zinc-800">
                         <h3 className="text-sm font-medium text-white mb-4">Settings</h3>
                         <div className="flex items-center justify-between">
                             <label className="text-sm text-zinc-400">Weight Unit</label>
