@@ -18,10 +18,20 @@ export default async function NewWorkoutPage() {
         .select('*')
         .order('name')
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('weight_unit')
+        .eq('id', user.id)
+        .single()
+
     return (
         <div className="min-h-screen bg-black p-4 pb-20 sm:p-8">
             <div className="mx-auto max-w-3xl">
-                <WorkoutLogger exercises={exercises || []} userId={user.id} />
+                <WorkoutLogger
+                    exercises={exercises || []}
+                    userId={user.id}
+                    initialUnit={profile?.weight_unit || 'kg'}
+                />
             </div>
         </div>
     )

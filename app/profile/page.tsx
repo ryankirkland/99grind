@@ -1,8 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
 import { Avatar } from '@/components/avatar'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
+import { updateProfile } from '@/app/profile/actions'
+import { cn } from '@/lib/utils'
 
 export default async function ProfilePage() {
     const supabase = await createClient()
@@ -60,6 +61,35 @@ export default async function ProfilePage() {
                             </div>
                         )}
                     </div>
+
+                    <form action={updateProfile} className="w-full rounded-xl bg-zinc-900/50 p-4 border border-zinc-800">
+                        <h3 className="text-sm font-medium text-white mb-4">Settings</h3>
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm text-zinc-400">Weight Unit</label>
+                            <div className="flex items-center gap-2 rounded-lg bg-black p-1">
+                                <button
+                                    name="weight_unit"
+                                    value="kg"
+                                    className={cn(
+                                        "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                                        profile?.weight_unit === 'kg' || !profile?.weight_unit ? "bg-zinc-800 text-white" : "text-zinc-500 hover:text-zinc-300"
+                                    )}
+                                >
+                                    KG
+                                </button>
+                                <button
+                                    name="weight_unit"
+                                    value="lbs"
+                                    className={cn(
+                                        "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                                        profile?.weight_unit === 'lbs' ? "bg-zinc-800 text-white" : "text-zinc-500 hover:text-zinc-300"
+                                    )}
+                                >
+                                    LBS
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
