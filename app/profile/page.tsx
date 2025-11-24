@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { Avatar } from '@/components/avatar'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { updateProfile } from '@/app/profile/actions'
 import { cn } from '@/lib/utils'
