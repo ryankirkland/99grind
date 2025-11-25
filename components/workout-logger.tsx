@@ -7,6 +7,7 @@ import { saveWorkout } from '@/app/workouts/actions'
 import { AddExerciseDialog } from '@/components/add-exercise-dialog'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { Switch } from '@/components/ui/switch'
 
 type Exercise = {
     id: string
@@ -237,12 +238,14 @@ export function WorkoutLogger({
                         />
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setUnit(unit === 'kg' ? 'lbs' : 'kg')}
-                            className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-zinc-400 hover:text-white border border-zinc-800 transition-colors"
-                        >
-                            {unit.toUpperCase()}
-                        </button>
+                        <div className="flex items-center gap-2 mr-2">
+                            <Switch
+                                checked={unit === 'lbs'}
+                                onCheckedChange={(checked) => setUnit(checked ? 'lbs' : 'kg')}
+                                leftLabel="KG"
+                                rightLabel="LBS"
+                            />
+                        </div>
                         <button
                             onClick={handleFinishWorkout}
                             disabled={isSaving || activeExercises.length === 0}
