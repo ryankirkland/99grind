@@ -159,6 +159,23 @@ export async function logRestDay() {
         return { error: 'Unauthorized' }
     }
 
+    // Check if user already worked out today
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date()
+    endOfDay.setHours(23, 59, 59, 999)
+
+    const { data: existingWorkouts } = await supabase
+        .from('workouts')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('started_at', startOfDay.toISOString())
+        .lte('started_at', endOfDay.toISOString())
+
+    if (existingWorkouts && existingWorkouts.length > 0) {
+        return { error: "You've already worked hard today!" }
+    }
+
     const xpEarned = 10
 
     // 1. Insert Workout

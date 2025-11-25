@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Search, Plus, Dumbbell, Activity } from 'lucide-react'
 import { AddExerciseDialog } from '@/components/add-exercise-dialog'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 type Exercise = {
     id: string
@@ -16,9 +17,11 @@ type Exercise = {
 export function ExerciseList({
     initialExercises,
     userId,
+    statsMap = {},
 }: {
     initialExercises: Exercise[]
     userId: string
+    statsMap?: Record<string, { totalSets: number; maxWeight: number }>
 }) {
     const [exercises, setExercises] = useState(initialExercises)
     const [search, setSearch] = useState('')
@@ -55,34 +58,48 @@ export function ExerciseList({
             </div>
 
             <div className="grid gap-3">
-                {filteredExercises.map((exercise) => (
-                    <div
-                        key={exercise.id}
-                        className="group flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/30 p-4 hover:border-zinc-700 hover:bg-zinc-900/50 transition-all"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className={cn(
-                                "flex h-10 w-10 items-center justify-center rounded-lg",
-                                exercise.type === 'Strength' ? "bg-emerald-500/10 text-emerald-500" : "bg-cyan-500/10 text-cyan-500"
-                            )}>
-                                {exercise.type === 'Strength' ? (
-                                    <Dumbbell className="h-5 w-5" />
-                                ) : (
-                                    <Activity className="h-5 w-5" />
-                                )}
+                {filteredExercises.map((exercise) => {
+                    const stats = statsMap[exercise.id] || { totalSets: 0, maxWeight: 0 }
+                    return (
+                        <Link
+                            key={exercise.id}
+                            href={`/exercises/${exercise.id}`}
+                            className="group flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/30 p-4 hover:border-zinc-700 hover:bg-zinc-900/50 transition-all"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className={cn(
+                                    "flex h-10 w-10 items-center justify-center rounded-lg",
+                                    exercise.type === 'Strength' ? "bg-emerald-500/10 text-emerald-500" : "bg-cyan-500/10 text-cyan-500"
+                                )}>
+                                    {exercise.type === 'Strength' ? (
+                                        <Dumbbell className="h-5 w-5" />
+                                    ) : (
+                                        <Activity className="h-5 w-5" />
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-white">{exercise.name}</h3>
+                                    <div className="flex items-center gap-3 text-xs text-zinc-500">
+                                        <span>{exercise.target_muscle}</span>
+                                        {stats.totalSets > 0 && (
+                                            <>
+                                                <span>•</span>
+                                                <span>{stats.totalSets} sets</span>
+                                                <span>•</span>
+                                                <span>Max {stats.maxWeight}kg</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-medium text-white">{exercise.name}</h3>
-                                <p className="text-xs text-zinc-500">{exercise.target_muscle}</p>
-                            </div>
-                        </div>
-                        {exercise.is_verified && (
-                            <span className="rounded-full bg-zinc-800 px-2 py-1 text-[10px] font-medium text-zinc-400">
-                                Verified
-                            </span>
-                        )}
-                    </div>
-                ))}
+                            {exercise.is_verified && (
+                                <span className="rounded-full bg-zinc-800 px-2 py-1 text-[10px] font-medium text-zinc-400">
+                                    Verified
+                                </span>
+                            )}
+                        </Link>
+                    )
+                })}
 
                 {filteredExercises.length === 0 && (
                     <div className="py-12 text-center">

@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Calendar, Trophy } from 'lucide-react'
+import { ChevronLeft, Calendar, Trophy, Pencil } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default async function WorkoutDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -75,25 +75,33 @@ export default async function WorkoutDetailsPage({ params }: { params: Promise<{
     return (
         <div className="min-h-screen bg-black p-4 pb-20 sm:p-8">
             <div className="mx-auto max-w-2xl space-y-8">
-                <header className="flex items-center gap-4">
-                    <Link href="/workouts" className="rounded-full bg-zinc-900 p-2 text-zinc-400 hover:text-white transition-colors">
-                        <ChevronLeft className="h-5 w-5" />
-                    </Link>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">
-                            {workout.name || 'Untitled Workout'}
-                        </h1>
-                        <div className="flex items-center gap-4 text-sm text-zinc-500">
-                            <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {format(new Date(workout.started_at), 'PPP')}
-                            </div>
-                            <div className="flex items-center gap-1 text-emerald-500">
-                                <Trophy className="h-3 w-3" />
-                                {workout.total_xp_earned} XP
+                <header className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Link href="/workouts" className="rounded-full bg-zinc-900 p-2 text-zinc-400 hover:text-white transition-colors">
+                            <ChevronLeft className="h-5 w-5" />
+                        </Link>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">
+                                {workout.name || 'Untitled Workout'}
+                            </h1>
+                            <div className="flex items-center gap-4 text-sm text-zinc-500">
+                                <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {format(new Date(workout.started_at), 'PPP')}
+                                </div>
+                                <div className="flex items-center gap-1 text-emerald-500">
+                                    <Trophy className="h-3 w-3" />
+                                    {workout.total_xp_earned} XP
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <Link
+                        href={`/workouts/${id}/edit`}
+                        className="rounded-full bg-zinc-900 p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                    >
+                        <Pencil className="h-5 w-5" />
+                    </Link>
                 </header>
 
                 <div className="space-y-6">

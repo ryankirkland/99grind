@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Plus, Save, Trash2, ChevronLeft, Search, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { saveWorkout } from '@/app/workouts/actions'
+import { saveWorkout, updateWorkout } from '@/app/workouts/actions'
 import { AddExerciseDialog } from '@/components/add-exercise-dialog'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -16,14 +16,14 @@ type Exercise = {
     type: string
 }
 
-type WorkoutSet = {
+export type WorkoutSet = {
     id: string
     reps: number
     weight: number
     completed: boolean
 }
 
-type WorkoutExercise = {
+export type WorkoutExercise = {
     id: string // unique id for this instance in the workout
     exerciseId: string
     name: string
@@ -34,15 +34,22 @@ export function WorkoutLogger({
     exercises,
     userId,
     initialUnit = 'kg',
+    initialData,
 }: {
     exercises: Exercise[]
     userId: string
     initialUnit?: string
+    initialData?: {
+        id: string
+        name: string
+        type: string
+        exercises: WorkoutExercise[]
+    }
 }) {
     const router = useRouter()
-    const [workoutName, setWorkoutName] = useState('')
-    const [workoutType, setWorkoutType] = useState('Strength')
-    const [activeExercises, setActiveExercises] = useState<WorkoutExercise[]>([])
+    const [workoutName, setWorkoutName] = useState(initialData?.name || '')
+    const [workoutType, setWorkoutType] = useState(initialData?.type || 'Strength')
+    const [activeExercises, setActiveExercises] = useState<WorkoutExercise[]>(initialData?.exercises || [])
     const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false)
     const [isAddExerciseDialogOpen, setIsAddExerciseDialogOpen] = useState(false)
     const [localExercises, setLocalExercises] = useState(exercises)
@@ -157,8 +164,13 @@ export function WorkoutLogger({
             })).filter(ex => ex.sets.length > 0),
         }
 
-        await saveWorkout(workoutData)
-        router.push('/')
+        if (initialData?.id) {
+            await updateWorkout(initialData.id, workoutData)
+        } else {
+            await saveWorkout(workoutData)
+        }
+
+        router.push(initialData?.id ? `/workouts/${initialData.id}` : '/')
     }
 
     if (isExercisePickerOpen) {

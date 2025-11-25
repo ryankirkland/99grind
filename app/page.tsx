@@ -1,11 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Dumbbell, Plus, History, Trophy, Coffee } from 'lucide-react'
+import { Dumbbell, Plus, History, Trophy } from 'lucide-react'
 import { StreakTracker } from '@/components/history/streak-tracker'
 import { Calendar } from '@/components/history/calendar'
 import { isSameDay, subDays, differenceInCalendarWeeks } from 'date-fns'
-import { logRestDay } from '@/app/workouts/actions'
+import { RestDayButton } from '@/components/rest-day-button'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -143,22 +143,7 @@ export default async function DashboardPage() {
             <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-white/10 blur-2xl transition-all group-hover:bg-white/20" />
           </Link>
 
-          <form action={async () => {
-            'use server'
-            await logRestDay()
-          }}>
-            <button
-              type="submit"
-              className="group relative flex h-full w-32 flex-col items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 p-4 transition-all hover:bg-zinc-800 hover:border-zinc-700 hover:scale-[1.02]"
-            >
-              <div className="mb-2 rounded-full bg-zinc-800 p-2 group-hover:bg-zinc-700">
-                <Coffee className="h-5 w-5 text-zinc-400 group-hover:text-white" />
-              </div>
-              <span className="text-sm font-bold text-zinc-400 group-hover:text-white text-center leading-tight">
-                Log<br />Rest Day
-              </span>
-            </button>
-          </form>
+          <RestDayButton workedOutToday={workedOutToday} />
         </div>
 
         <div className="space-y-4">
