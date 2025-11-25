@@ -14,15 +14,16 @@ type Exercise = {
     is_verified: boolean | null
 }
 
-initialExercises,
+export function ExerciseList({
+    initialExercises,
     userId,
     statsMap = {},
     unit = 'kg',
 }: {
     initialExercises: Exercise[]
     userId: string
-    statsMap ?: Record<string, { totalSets: number; maxWeight: number }>
-    unit ?: string
+    statsMap?: Record<string, { totalSets: number; maxWeight: number }>
+    unit?: string
 }) {
     const toDisplay = (weight: number) => {
         if (unit === 'lbs') {

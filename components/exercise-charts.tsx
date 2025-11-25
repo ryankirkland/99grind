@@ -92,7 +92,6 @@ export function ExerciseCharts({ logs, unit = 'kg' }: { logs: Log[], unit?: stri
         return {
             totalSets,
             totalReps,
-            totalReps,
             maxWeight: toDisplay(maxWeight),
             avgWeight: weightCount > 0 ? toDisplay(totalWeight / weightCount) : 0
         }
