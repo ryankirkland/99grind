@@ -1,10 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Dumbbell, Plus, History, Trophy } from 'lucide-react'
+import { Dumbbell, Plus, History, Trophy, Coffee } from 'lucide-react'
 import { StreakTracker } from '@/components/history/streak-tracker'
 import { Calendar } from '@/components/history/calendar'
 import { isSameDay, subDays, differenceInCalendarWeeks } from 'date-fns'
+import { logRestDay } from '@/app/workouts/actions'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -125,21 +126,40 @@ export default async function DashboardPage() {
 
         <StreakTracker dayStreak={dayStreak} weekStreak={weekStreak} />
 
-        <Link
-          href="/workouts/new"
-          className="group relative block overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 transition-transform hover:scale-[1.02]"
-        >
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-white">Start Workout</h2>
-              <p className="mt-1 text-sm text-emerald-100">Log a new session and earn XP.</p>
+        <div className="flex gap-4">
+          <Link
+            href="/workouts/new"
+            className="group relative block flex-1 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 transition-transform hover:scale-[1.02]"
+          >
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white">Start Workout</h2>
+                <p className="mt-1 text-sm text-emerald-100">Log a new session and earn XP.</p>
+              </div>
+              <div className="inline-flex rounded-xl bg-white/20 p-3 backdrop-blur-sm">
+                <Plus className="h-6 w-6 text-white" />
+              </div>
             </div>
-            <div className="inline-flex rounded-xl bg-white/20 p-3 backdrop-blur-sm">
-              <Plus className="h-6 w-6 text-white" />
-            </div>
-          </div>
-          <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-white/10 blur-2xl transition-all group-hover:bg-white/20" />
-        </Link>
+            <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-white/10 blur-2xl transition-all group-hover:bg-white/20" />
+          </Link>
+
+          <form action={async () => {
+            'use server'
+            await logRestDay()
+          }}>
+            <button
+              type="submit"
+              className="group relative flex h-full w-32 flex-col items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 p-4 transition-all hover:bg-zinc-800 hover:border-zinc-700 hover:scale-[1.02]"
+            >
+              <div className="mb-2 rounded-full bg-zinc-800 p-2 group-hover:bg-zinc-700">
+                <Coffee className="h-5 w-5 text-zinc-400 group-hover:text-white" />
+              </div>
+              <span className="text-sm font-bold text-zinc-400 group-hover:text-white text-center leading-tight">
+                Log<br />Rest Day
+              </span>
+            </button>
+          </form>
+        </div>
 
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-white">Activity</h2>

@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Activity, Dumbbell, Heart, Brain, ChevronRight } from 'lucide-react'
+import { Activity, Dumbbell, Heart, Brain, ChevronRight, Coffee } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 
@@ -31,6 +31,7 @@ export function WorkoutList({ workouts }: WorkoutListProps) {
             case 'Cardio': return <Heart className="h-5 w-5" />
             case 'Flexibility': return <Activity className="h-5 w-5" />
             case 'Mindfulness': return <Brain className="h-5 w-5" />
+            case 'Rest': return <Coffee className="h-5 w-5" />
             default: return <Dumbbell className="h-5 w-5" />
         }
     }
@@ -40,6 +41,7 @@ export function WorkoutList({ workouts }: WorkoutListProps) {
             case 'Cardio': return "bg-blue-500/10 text-blue-500 group-hover:bg-blue-500/20"
             case 'Flexibility': return "bg-green-500/10 text-green-500 group-hover:bg-green-500/20"
             case 'Mindfulness': return "bg-yellow-500/10 text-yellow-500 group-hover:bg-yellow-500/20"
+            case 'Rest': return "bg-zinc-800 text-zinc-400 group-hover:bg-zinc-700 group-hover:text-zinc-300"
             default: return "bg-red-500/10 text-red-500 group-hover:bg-red-500/20"
         }
     }
@@ -65,7 +67,8 @@ export function WorkoutList({ workouts }: WorkoutListProps) {
                                         type === 'Cardio' ? "text-blue-400" :
                                             type === 'Flexibility' ? "text-green-400" :
                                                 type === 'Mindfulness' ? "text-yellow-400" :
-                                                    "text-red-400"
+                                                    type === 'Rest' ? "text-zinc-400" :
+                                                        "text-red-400"
                                     )}>{type}</span>
                                     <span className="text-zinc-600">•</span>
                                     <span className="text-zinc-500">{format(new Date(workout.started_at), 'PPP')}</span>

@@ -147,3 +147,60 @@ export async function saveWorkout(workoutData: WorkoutData) {
     revalidatePath('/')
     return { success: true }
 }
+
+export async function logRestDay() {
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    const xpEarned = 10
+
+    // 1. Insert Workout
+    const { error: workoutError } = await supabase
+        .from('workouts')
+        .insert({
+            user_id: user.id,
+            name: 'Rest Day',
+            type: 'Rest',
+            total_xp_earned: xpEarned,
+            ended_at: new Date().toISOString(),
+        })
+
+    if (workoutError) {
+        return { error: workoutError.message }
+    }
+
+    // 2. Update Profile
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('stats, current_xp, level')
+        .eq('id', user.id)
+        .single()
+
+    if (profile) {
+        const currentStats = (profile.stats as Record<string, number>) || {}
+        const newStats = { ...currentStats }
+        newStats['rest_days'] = (newStats['rest_days'] || 0) + 1
+
+        const newXP = (profile.current_xp || 0) + xpEarned
+        const newLevel = 1 + Math.floor(newXP / 1000)
+
+        await supabase
+            .from('profiles')
+            .update({
+                stats: newStats,
+                current_xp: newXP,
+                level: newLevel,
+            })
+            .eq('id', user.id)
+    }
+
+    revalidatePath('/')
+    return { success: true }
+}
