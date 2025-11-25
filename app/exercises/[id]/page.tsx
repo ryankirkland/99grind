@@ -45,6 +45,21 @@ export default async function ExerciseDetailsPage({ params }: { params: Promise<
         }
     }) || []
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('weight_unit')
+        .eq('id', user.id)
+        .single()
+
+    const unit = profile?.weight_unit || 'kg'
+
+    const toDisplay = (weight: number) => {
+        if (unit === 'lbs') {
+            return Math.round(weight * 2.20462)
+        }
+        return Math.round(weight)
+    }
+
     return (
         <div className="min-h-screen bg-black p-4 pb-20 sm:p-8">
             <div className="mx-auto max-w-2xl space-y-8">
@@ -61,7 +76,7 @@ export default async function ExerciseDetailsPage({ params }: { params: Promise<
                     </div>
                 </header>
 
-                <ExerciseCharts logs={history} />
+                <ExerciseCharts logs={history} unit={unit} />
 
                 <div className="space-y-4">
                     <h2 className="text-xl font-bold text-white">History</h2>
@@ -73,7 +88,7 @@ export default async function ExerciseDetailsPage({ params }: { params: Promise<
                                     <p className="text-xs text-zinc-500">{log.sets} sets • {log.reps} reps</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-lg font-bold text-emerald-400">{log.weight}kg</p>
+                                    <p className="text-lg font-bold text-emerald-400">{toDisplay(log.weight)}{unit}</p>
                                 </div>
                             </div>
                         ))}

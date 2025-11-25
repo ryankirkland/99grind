@@ -67,9 +67,9 @@ export default async function WorkoutDetailsPage({ params }: { params: Promise<{
 
     const toDisplay = (weight: number) => {
         if (unit === 'lbs') {
-            return Math.round(weight * 2.20462 * 10) / 10
+            return Math.round(weight * 2.20462)
         }
-        return weight
+        return Math.round(weight)
     }
 
     return (

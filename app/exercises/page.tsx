@@ -43,6 +43,14 @@ export default async function ExercisesPage() {
         })
     }
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('weight_unit')
+        .eq('id', user.id)
+        .single()
+
+    const unit = profile?.weight_unit || 'kg'
+
     return (
         <div className="min-h-screen bg-black p-4 pb-20 sm:p-8">
             <div className="mx-auto max-w-2xl space-y-8">
@@ -62,6 +70,7 @@ export default async function ExercisesPage() {
                     initialExercises={exercises || []}
                     userId={user.id}
                     statsMap={statsMap}
+                    unit={unit}
                 />
             </div>
         </div>

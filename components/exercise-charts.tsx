@@ -20,8 +20,15 @@ type ChartDataPoint = {
     value: number
 }
 
-export function ExerciseCharts({ logs }: { logs: Log[] }) {
+export function ExerciseCharts({ logs, unit = 'kg' }: { logs: Log[], unit?: string }) {
     const [selectedMetric, setSelectedMetric] = useState<'sets' | 'reps' | 'maxWeight' | 'avgWeight'>('maxWeight')
+
+    const toDisplay = (weight: number) => {
+        if (unit === 'lbs') {
+            return Math.round(weight * 2.20462)
+        }
+        return Math.round(weight)
+    }
 
     // Process logs into daily stats
     const dailyStats = useMemo(() => {
@@ -85,8 +92,9 @@ export function ExerciseCharts({ logs }: { logs: Log[] }) {
         return {
             totalSets,
             totalReps,
-            maxWeight,
-            avgWeight: weightCount > 0 ? Math.round(totalWeight / weightCount) : 0
+            totalReps,
+            maxWeight: toDisplay(maxWeight),
+            avgWeight: weightCount > 0 ? toDisplay(totalWeight / weightCount) : 0
         }
     }, [logs])
 
@@ -106,12 +114,12 @@ export function ExerciseCharts({ logs }: { logs: Log[] }) {
             } else if (selectedMetric === 'maxWeight') {
                 // Cumulative Max Weight (PR)
                 cumulativeMaxWeight = Math.max(cumulativeMaxWeight, day.maxWeight)
-                value = cumulativeMaxWeight
+                value = toDisplay(cumulativeMaxWeight)
             } else if (selectedMetric === 'avgWeight') {
                 // Rolling Average
                 cumulativeTotalWeight += day.totalWeight
                 cumulativeWeightCount += day.weightCount
-                value = cumulativeWeightCount > 0 ? Math.round(cumulativeTotalWeight / cumulativeWeightCount) : 0
+                value = cumulativeWeightCount > 0 ? toDisplay(cumulativeTotalWeight / cumulativeWeightCount) : 0
             }
 
             return {
@@ -129,7 +137,7 @@ export function ExerciseCharts({ logs }: { logs: Log[] }) {
                     <p className="mb-1 text-sm font-medium text-zinc-400">{label}</p>
                     <p className="text-lg font-bold text-white">
                         {payload[0].value}
-                        {selectedMetric.includes('Weight') ? 'kg' : ''}
+                        {selectedMetric.includes('Weight') ? unit : ''}
                     </p>
                 </div>
             )
@@ -185,7 +193,7 @@ export function ExerciseCharts({ logs }: { logs: Log[] }) {
                         <Trophy className="h-4 w-4" />
                     </div>
                     <p className="text-xs text-zinc-500 uppercase font-medium">Max Weight</p>
-                    <p className="text-2xl font-bold text-white">{totals.maxWeight}kg</p>
+                    <p className="text-2xl font-bold text-white">{totals.maxWeight}{unit}</p>
                 </button>
 
                 <button
@@ -201,7 +209,7 @@ export function ExerciseCharts({ logs }: { logs: Log[] }) {
                         <Scale className="h-4 w-4" />
                     </div>
                     <p className="text-xs text-zinc-500 uppercase font-medium">Avg Weight</p>
-                    <p className="text-2xl font-bold text-white">{totals.avgWeight}kg</p>
+                    <p className="text-2xl font-bold text-white">{totals.avgWeight}{unit}</p>
                 </button>
             </div>
 

@@ -63,9 +63,9 @@ export function WorkoutLogger({
 
     const toDisplay = (weight: number) => {
         if (unit === 'lbs') {
-            return Math.round(weight * 2.20462 * 10) / 10
+            return Math.round(weight * 2.20462)
         }
-        return weight
+        return Math.round(weight)
     }
 
     const toStorage = (displayWeight: number) => {

@@ -14,15 +14,22 @@ type Exercise = {
     is_verified: boolean | null
 }
 
-export function ExerciseList({
-    initialExercises,
+initialExercises,
     userId,
     statsMap = {},
+    unit = 'kg',
 }: {
     initialExercises: Exercise[]
     userId: string
-    statsMap?: Record<string, { totalSets: number; maxWeight: number }>
+    statsMap ?: Record<string, { totalSets: number; maxWeight: number }>
+    unit ?: string
 }) {
+    const toDisplay = (weight: number) => {
+        if (unit === 'lbs') {
+            return Math.round(weight * 2.20462)
+        }
+        return Math.round(weight)
+    }
     const [exercises, setExercises] = useState(initialExercises)
     const [search, setSearch] = useState('')
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -86,7 +93,7 @@ export function ExerciseList({
                                                 <span>•</span>
                                                 <span>{stats.totalSets} sets</span>
                                                 <span>•</span>
-                                                <span>Max {stats.maxWeight}kg</span>
+                                                <span>Max {toDisplay(stats.maxWeight)}{unit}</span>
                                             </>
                                         )}
                                     </div>
