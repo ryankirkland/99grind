@@ -143,7 +143,7 @@ export default async function DashboardPage() {
 
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-white">Activity</h2>
-          <Calendar workoutDates={workoutDates} />
+          <Calendar workouts={workouts || []} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
