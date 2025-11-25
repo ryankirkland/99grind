@@ -296,10 +296,15 @@ export async function updateWorkout(workoutId: string, workoutData: WorkoutData)
             .eq('id', workoutId)
 
         // Replace Logs
-        await supabase
+        const { error: deleteError } = await supabase
             .from('workout_logs')
             .delete()
             .eq('workout_id', workoutId)
+
+        if (deleteError) {
+            console.error('Error deleting old logs:', deleteError)
+            return { error: 'Failed to update workout logs' }
+        }
 
         const logEntries = workoutData.exercises.flatMap((ex) =>
             ex.sets.map(set => ({
