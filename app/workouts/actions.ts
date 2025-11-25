@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 type WorkoutData = {
     name: string
+    type: string
     exercises: {
         exercise_id: string
         sets: {
@@ -55,6 +56,7 @@ export async function saveWorkout(workoutData: WorkoutData) {
         .insert({
             user_id: user.id,
             name: workoutData.name,
+            type: workoutData.type,
             total_xp_earned: totalXP,
             ended_at: new Date().toISOString(),
         })

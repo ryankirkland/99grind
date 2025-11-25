@@ -99,6 +99,7 @@ export function AddExerciseDialog({
                                 <option value="Strength">Strength</option>
                                 <option value="Cardio">Cardio</option>
                                 <option value="Flexibility">Flexibility</option>
+                                <option value="Mindfulness">Mindfulness</option>
                             </select>
                         </div>
                     </div>

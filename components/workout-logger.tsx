@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Plus, Save, Trash2, ChevronLeft, Search, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { saveWorkout } from '@/app/workouts/actions'
+import { AddExerciseDialog } from '@/components/add-exercise-dialog'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -39,13 +40,16 @@ export function WorkoutLogger({
 }) {
     const router = useRouter()
     const [workoutName, setWorkoutName] = useState('')
+    const [workoutType, setWorkoutType] = useState('Strength')
     const [activeExercises, setActiveExercises] = useState<WorkoutExercise[]>([])
     const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false)
+    const [isAddExerciseDialogOpen, setIsAddExerciseDialogOpen] = useState(false)
+    const [localExercises, setLocalExercises] = useState(exercises)
     const [search, setSearch] = useState('')
     const [isSaving, setIsSaving] = useState(false)
     const [unit, setUnit] = useState(initialUnit)
 
-    const filteredExercises = exercises.filter((ex) =>
+    const filteredExercises = localExercises.filter((ex) =>
         ex.name.toLowerCase().includes(search.toLowerCase())
     )
 
@@ -75,6 +79,12 @@ export function WorkoutLogger({
         setActiveExercises([...activeExercises, newExercise])
         setIsExercisePickerOpen(false)
         setSearch('')
+    }
+
+    const handleNewExerciseAdded = (exercise: Exercise) => {
+        setLocalExercises([...localExercises, exercise].sort((a, b) => a.name.localeCompare(b.name)))
+        addExerciseToWorkout(exercise)
+        setIsAddExerciseDialogOpen(false)
     }
 
     const addSet = (exerciseIndex: number) => {
@@ -136,6 +146,7 @@ export function WorkoutLogger({
 
         const workoutData = {
             name: workoutName || 'Untitled Workout',
+            type: workoutType,
             exercises: activeExercises.map((ex) => ({
                 exercise_id: ex.exerciseId,
                 sets: ex.sets.filter(s => s.completed).map((s) => ({
@@ -184,40 +195,83 @@ export function WorkoutLogger({
                             <span className="text-xs text-zinc-500">{exercise.target_muscle}</span>
                         </button>
                     ))}
+
+                    {filteredExercises.length === 0 && (
+                        <div className="py-8 text-center">
+                            <p className="text-zinc-500 mb-4">No exercises found.</p>
+                            <button
+                                onClick={() => setIsAddExerciseDialogOpen(true)}
+                                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors"
+                            >
+                                Create "{search}"
+                            </button>
+                        </div>
+                    )}
                 </div>
+
+                {isAddExerciseDialogOpen && (
+                    <AddExerciseDialog
+                        onClose={() => setIsAddExerciseDialogOpen(false)}
+                        onAdd={handleNewExerciseAdded}
+                        userId={userId}
+                        initialName={search}
+                    />
+                )}
             </div>
         )
     }
 
     return (
         <div className="space-y-8">
-            <header className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="rounded-full bg-zinc-900 p-2 text-zinc-400 hover:text-white transition-colors">
-                        <ChevronLeft className="h-5 w-5" />
-                    </Link>
-                    <input
-                        value={workoutName}
-                        onChange={(e) => setWorkoutName(e.target.value)}
-                        placeholder="Workout Name"
-                        className="bg-transparent text-2xl font-bold text-white placeholder-zinc-600 focus:outline-none w-full"
-                    />
+            <header className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Link href="/" className="rounded-full bg-zinc-900 p-2 text-zinc-400 hover:text-white transition-colors">
+                            <ChevronLeft className="h-5 w-5" />
+                        </Link>
+                        <input
+                            value={workoutName}
+                            onChange={(e) => setWorkoutName(e.target.value)}
+                            placeholder="Workout Name"
+                            className="bg-transparent text-2xl font-bold text-white placeholder-zinc-600 focus:outline-none w-full"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setUnit(unit === 'kg' ? 'lbs' : 'kg')}
+                            className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-zinc-400 hover:text-white border border-zinc-800 transition-colors"
+                        >
+                            {unit.toUpperCase()}
+                        </button>
+                        <button
+                            onClick={handleFinishWorkout}
+                            disabled={isSaving || activeExercises.length === 0}
+                            className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-50 transition-colors"
+                        >
+                            <Save className="h-4 w-4" />
+                            <span>{isSaving ? 'Saving...' : 'Finish'}</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setUnit(unit === 'kg' ? 'lbs' : 'kg')}
-                        className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-zinc-400 hover:text-white border border-zinc-800 transition-colors"
-                    >
-                        {unit.toUpperCase()}
-                    </button>
-                    <button
-                        onClick={handleFinishWorkout}
-                        disabled={isSaving || activeExercises.length === 0}
-                        className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-50 transition-colors"
-                    >
-                        <Save className="h-4 w-4" />
-                        <span>{isSaving ? 'Saving...' : 'Finish'}</span>
-                    </button>
+
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                    {['Strength', 'Cardio', 'Flexibility', 'Mindfulness'].map((type) => (
+                        <button
+                            key={type}
+                            onClick={() => setWorkoutType(type)}
+                            className={cn(
+                                "rounded-full px-4 py-1.5 text-xs font-medium border transition-all whitespace-nowrap",
+                                workoutType === type
+                                    ? type === 'Strength' ? "bg-red-500/10 text-red-500 border-red-500"
+                                        : type === 'Cardio' ? "bg-blue-500/10 text-blue-500 border-blue-500"
+                                            : type === 'Flexibility' ? "bg-green-500/10 text-green-500 border-green-500"
+                                                : "bg-yellow-500/10 text-yellow-500 border-yellow-500"
+                                    : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700"
+                            )}
+                        >
+                            {type}
+                        </button>
+                    ))}
                 </div>
             </header>
 
