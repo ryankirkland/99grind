@@ -164,10 +164,17 @@ export function WorkoutLogger({
             })).filter(ex => ex.sets.length > 0),
         }
 
+        let result
         if (initialData?.id) {
-            await updateWorkout(initialData.id, workoutData)
+            result = await updateWorkout(initialData.id, workoutData)
         } else {
-            await saveWorkout(workoutData)
+            result = await saveWorkout(workoutData)
+        }
+
+        if (result?.error) {
+            alert(`Error saving workout: ${result.error}`)
+            setIsSaving(false)
+            return
         }
 
         router.push(initialData?.id ? `/workouts/${initialData.id}` : '/')
@@ -351,11 +358,17 @@ export function WorkoutLogger({
                                         <button
                                             onClick={() => toggleSetCompletion(exerciseIndex, setIndex)}
                                             className={cn(
-                                                "flex h-8 w-full items-center justify-center rounded-lg transition-colors",
+                                                "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
                                                 set.completed ? "bg-emerald-500 text-black" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                                             )}
                                         >
                                             <Check className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => removeSet(exerciseIndex, setIndex)}
+                                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400 hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
                                         </button>
                                     </div>
                                 </div>
