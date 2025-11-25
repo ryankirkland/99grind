@@ -1,7 +1,9 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Activity, Dumbbell, Heart, Brain } from 'lucide-react'
+import { Activity, Dumbbell, Heart, Brain, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { format } from 'date-fns'
 
 type Workout = {
     id: string
