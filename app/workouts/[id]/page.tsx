@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { ChevronLeft, Calendar, Trophy } from 'lucide-react'
 import { format } from 'date-fns'
 
-export default async function WorkoutDetailsPage({ params }: { params: { id: string } }) {
+export default async function WorkoutDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient()
+    const { id } = await params
 
     const {
         data: { user },
@@ -19,7 +20,7 @@ export default async function WorkoutDetailsPage({ params }: { params: { id: str
     const { data: workout } = await supabase
         .from('workouts')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
     if (!workout) {
@@ -50,15 +51,15 @@ export default async function WorkoutDetailsPage({ params }: { params: { id: str
 
     // Group logs by exercise
     const exercises: any[] = []
-    logs?.forEach((log) => {
+    logs?.forEach((log: any) => {
         const lastExercise = exercises[exercises.length - 1]
         if (lastExercise && lastExercise.exercise_id === log.exercise_id) {
             lastExercise.sets.push(log)
         } else {
             exercises.push({
                 exercise_id: log.exercise_id,
-                name: log.exercises.name,
-                target_muscle: log.exercises.target_muscle,
+                name: log.exercises?.name || 'Unknown Exercise',
+                target_muscle: log.exercises?.target_muscle || 'General',
                 sets: [log],
             })
         }
