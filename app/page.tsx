@@ -125,26 +125,28 @@ export default async function DashboardPage() {
 
         <StreakTracker dayStreak={dayStreak} weekStreak={weekStreak} />
 
+        <Link
+          href="/workouts/new"
+          className="group relative block overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 transition-transform hover:scale-[1.02]"
+        >
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-white">Start Workout</h2>
+              <p className="mt-1 text-sm text-emerald-100">Log a new session and earn XP.</p>
+            </div>
+            <div className="inline-flex rounded-xl bg-white/20 p-3 backdrop-blur-sm">
+              <Plus className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-white/10 blur-2xl transition-all group-hover:bg-white/20" />
+        </Link>
+
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-white">Activity</h2>
           <Calendar workoutDates={workoutDates} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Link
-            href="/workouts/new"
-            className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 transition-transform hover:scale-[1.02]"
-          >
-            <div className="relative z-10">
-              <div className="mb-4 inline-flex rounded-xl bg-white/20 p-3 backdrop-blur-sm">
-                <Plus className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-xl font-bold text-white">Start Workout</h2>
-              <p className="mt-1 text-sm text-emerald-100">Log a new session and earn XP.</p>
-            </div>
-            <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-white/10 blur-2xl transition-all group-hover:bg-white/20" />
-          </Link>
-
           <Link
             href="/exercises"
             className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 p-6 transition-transform hover:scale-[1.02] hover:border-zinc-700"
@@ -160,7 +162,7 @@ export default async function DashboardPage() {
 
           <Link
             href="/workouts"
-            className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 p-6 transition-transform hover:scale-[1.02] hover:border-zinc-700 sm:col-span-2"
+            className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 p-6 transition-transform hover:scale-[1.02] hover:border-zinc-700"
           >
             <div className="relative z-10">
               <div className="mb-4 inline-flex rounded-xl bg-zinc-800 p-3">

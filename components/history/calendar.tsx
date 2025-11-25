@@ -58,10 +58,10 @@ export function Calendar({ workoutDates }: CalendarProps) {
                         <div
                             key={day.toString()}
                             className={cn(
-                                "flex aspect-square items-center justify-center rounded-lg text-sm transition-all",
-                                !isSameMonth(day, currentMonth) && "text-zinc-600",
+                                "flex aspect-square items-center justify-center rounded-full text-xs transition-all",
+                                !isSameMonth(day, currentMonth) && "text-zinc-700",
                                 isToday(day) && "ring-1 ring-emerald-500",
-                                hasWorkout ? "bg-emerald-500 text-black font-bold" : "text-zinc-300 hover:bg-zinc-800"
+                                hasWorkout ? "bg-emerald-500 text-black font-bold" : "text-zinc-400 hover:bg-zinc-800"
                             )}
                         >
                             {format(day, 'd')}
