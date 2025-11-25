@@ -68,33 +68,6 @@ export async function saveWorkout(workoutData: WorkoutData) {
     }
 
     // 3. Insert Logs
-    const logs = workoutData.exercises.flatMap((ex) =>
-        ex.sets.map((set) => ({
-            workout_id: workout.id,
-            exercise_id: ex.exercise_id,
-            sets: 1, // Each log entry is technically 1 set in this data model if we want granular logs, but schema says 'sets' int.
-            // Wait, schema has 'sets' int. If we log per set, we should probably just sum them up or change schema.
-            // Let's assume schema 'workout_logs' is one row per exercise per workout, with total sets.
-            // Actually, my schema was: workout_id, exercise_id, sets, reps, weight.
-            // If I have multiple sets with different weights, I can't store them in one row easily unless I use arrays or JSON.
-            // Or I insert multiple rows for the same exercise?
-            // Let's stick to one row per set for maximum granularity, OR one row per exercise with average/max weight.
-            // The schema `sets` int implies "Number of sets".
-            // Let's aggregate for now to match the schema simplicity: One row per exercise.
-            // We'll store the max weight and total reps.
-            // Ideally, we should have a `sets` table, but let's work with what we have.
-            // I'll store the number of sets performed.
-            reps: set.reps, // This is wrong if aggregating.
-            weight: set.weight, // This is wrong if aggregating.
-        }))
-    )
-
-    // RE-EVALUATING SCHEMA:
-    // The schema `workout_logs` has `sets`, `reps`, `weight`. This is typical for "3 sets of 10 reps at 100kg".
-    // But if sets vary, this breaks.
-    // For this MVP, let's insert one row per set, setting `sets` = 1.
-    // This allows granular tracking.
-
     const logEntries = workoutData.exercises.flatMap((ex) =>
         ex.sets.map(set => ({
             workout_id: workout.id,
@@ -110,12 +83,10 @@ export async function saveWorkout(workoutData: WorkoutData) {
         .insert(logEntries)
 
     if (logsError) {
-        // Should probably rollback workout but keeping it simple
         console.error('Error saving logs:', logsError)
     }
 
     // 4. Update User Profile (XP and Stats)
-    // We need to fetch current stats first to increment
     const { data: profile } = await supabase
         .from('profiles')
         .select('stats, current_xp, level')
@@ -131,7 +102,6 @@ export async function saveWorkout(workoutData: WorkoutData) {
         })
 
         const newXP = (profile.current_xp || 0) + totalXP
-        // Simple leveling: Level = 1 + floor(XP / 1000)
         const newLevel = 1 + Math.floor(newXP / 1000)
 
         await supabase
@@ -219,5 +189,134 @@ export async function logRestDay() {
     }
 
     revalidatePath('/')
+    return { success: true }
+}
+
+export async function updateWorkout(workoutId: string, workoutData: WorkoutData) {
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    // 1. Fetch Old Data & Revert Stats
+    const { data: oldWorkout } = await supabase
+        .from('workouts')
+        .select('*, workout_logs(*, exercises(type))')
+        .eq('id', workoutId)
+        .single()
+
+    if (!oldWorkout) return { error: 'Workout not found' }
+
+    // Calculate old stats to subtract
+    let oldXP = oldWorkout.total_xp_earned
+    const oldStats: Record<string, number> = {}
+
+    // We need to reconstruct how stats were calculated. 
+    // Previously we just counted sets per type.
+    // We can iterate over the logs.
+    oldWorkout.workout_logs.forEach((log: any) => {
+        const type = log.exercises?.type || 'Strength'
+        const statKey = type.toLowerCase()
+        // In saveWorkout we did: statsUpdate[statKey] += sets.length
+        // Here log.sets is the number of sets (int).
+        oldStats[statKey] = (oldStats[statKey] || 0) + log.sets
+    })
+
+    // Fetch Profile
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('stats, current_xp, level')
+        .eq('id', user.id)
+        .single()
+
+    if (profile) {
+        const currentStats = (profile.stats as Record<string, number>) || {}
+        const revertedStats = { ...currentStats }
+
+        // Revert
+        Object.entries(oldStats).forEach(([key, value]) => {
+            revertedStats[key] = Math.max(0, (revertedStats[key] || 0) - value)
+        })
+        const revertedXP = Math.max(0, (profile.current_xp || 0) - oldXP)
+
+        // 2. Calculate New Stats
+        let newXP = 100 // Base XP
+        const newStatsUpdate: Record<string, number> = {}
+
+        // Fetch exercise details for new data
+        const exerciseIds = workoutData.exercises.map(e => e.exercise_id)
+        const { data: exerciseDetails } = await supabase
+            .from('exercises')
+            .select('id, type')
+            .in('id', exerciseIds)
+
+        const exerciseTypeMap = new Map(exerciseDetails?.map(e => [e.id, e.type]))
+
+        workoutData.exercises.forEach((ex) => {
+            const type = exerciseTypeMap.get(ex.exercise_id) || 'General'
+            const setXP = ex.sets.length * 10
+            newXP += setXP
+
+            const statKey = type.toLowerCase()
+            newStatsUpdate[statKey] = (newStatsUpdate[statKey] || 0) + ex.sets.length
+        })
+
+        // Apply New Stats
+        const finalStats = { ...revertedStats }
+        Object.entries(newStatsUpdate).forEach(([key, value]) => {
+            finalStats[key] = (finalStats[key] || 0) + value
+        })
+        const finalXP = revertedXP + newXP
+        const finalLevel = 1 + Math.floor(finalXP / 1000)
+
+        // Update Profile
+        await supabase
+            .from('profiles')
+            .update({
+                stats: finalStats,
+                current_xp: finalXP,
+                level: finalLevel,
+            })
+            .eq('id', user.id)
+
+        // 3. Update Workout Data
+        // Update Workout
+        await supabase
+            .from('workouts')
+            .update({
+                name: workoutData.name,
+                type: workoutData.type,
+                total_xp_earned: newXP,
+            })
+            .eq('id', workoutId)
+
+        // Replace Logs
+        await supabase
+            .from('workout_logs')
+            .delete()
+            .eq('workout_id', workoutId)
+
+        const logEntries = workoutData.exercises.flatMap((ex) =>
+            ex.sets.map(set => ({
+                workout_id: workoutId,
+                exercise_id: ex.exercise_id,
+                sets: 1,
+                reps: set.reps,
+                weight: set.weight
+            }))
+        )
+
+        await supabase
+            .from('workout_logs')
+            .insert(logEntries)
+    }
+
+    revalidatePath('/')
+    revalidatePath(`/workouts/${workoutId}`)
     return { success: true }
 }
