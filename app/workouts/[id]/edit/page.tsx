@@ -2,7 +2,8 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { WorkoutLogger, WorkoutExercise } from '@/components/workout-logger'
 
-export default async function EditWorkoutPage({ params }: { params: { id: string } }) {
+export default async function EditWorkoutPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
     const supabase = await createClient()
 
     const {
@@ -27,7 +28,7 @@ export default async function EditWorkoutPage({ params }: { params: { id: string
                 )
             )
         `)
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
     if (!workout || workout.user_id !== user.id) {

@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { ChevronLeft, Trophy, Activity, Scale, Repeat } from 'lucide-react'
 import { format } from 'date-fns'
 
-export default async function ExerciseDetailsPage({ params }: { params: { id: string } }) {
+export default async function ExerciseDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
     const supabase = await createClient()
 
     const {
@@ -18,7 +19,7 @@ export default async function ExerciseDetailsPage({ params }: { params: { id: st
     const { data: exercise } = await supabase
         .from('exercises')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
     if (!exercise) {
@@ -34,7 +35,7 @@ export default async function ExerciseDetailsPage({ params }: { params: { id: st
                 started_at
             )
         `)
-        .eq('exercise_id', params.id)
+        .eq('exercise_id', id)
         .order('created_at', { ascending: false })
 
     // Calculate Stats
