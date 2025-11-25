@@ -2,10 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
-import { StreakTracker } from '@/components/history/streak-tracker'
-import { Calendar } from '@/components/history/calendar'
 import { WorkoutList } from '@/components/history/workout-list'
-import { isSameDay, subDays, differenceInCalendarWeeks } from 'date-fns'
 
 export default async function WorkoutsPage() {
     const supabase = await createClient()
@@ -112,18 +109,9 @@ export default async function WorkoutsPage() {
                     </h1>
                 </header>
 
-                <StreakTracker dayStreak={dayStreak} weekStreak={weekStreak} />
-
-                <div className="grid gap-8 md:grid-cols-2">
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-bold text-white">Calendar</h2>
-                        <Calendar workoutDates={workoutDates} />
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-bold text-white">Recent Workouts</h2>
-                        <WorkoutList workouts={workouts || []} />
-                    </div>
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-white">Recent Workouts</h2>
+                    <WorkoutList workouts={workouts || []} />
                 </div>
             </div>
         </div>
