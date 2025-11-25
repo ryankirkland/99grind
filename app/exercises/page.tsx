@@ -1,6 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { ExerciseList } from '@/components/exercise-list'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 
 export default async function ExercisesPage() {
     const supabase = await createClient()
@@ -21,7 +23,10 @@ export default async function ExercisesPage() {
     return (
         <div className="min-h-screen bg-black p-4 pb-20 sm:p-8">
             <div className="mx-auto max-w-2xl space-y-8">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Link href="/" className="rounded-full bg-zinc-900 p-2 text-zinc-400 hover:text-white transition-colors">
+                        <ChevronLeft className="h-5 w-5" />
+                    </Link>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tighter text-white">
                             Exercises
