@@ -110,7 +110,7 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-2xl space-y-8">
         <header className="flex items-center justify-between">
           <div>
-            <div className="relative h-12 w-40 mb-1">
+            <div className="relative h-36 w-[30rem] mb-1">
               <Image
                 src="/99grindlogo.png"
                 alt="99Grind Logo"
@@ -119,7 +119,6 @@ export default async function DashboardPage() {
                 priority
               />
             </div>
-            <p className="text-zinc-400 text-sm">Welcome back, {profile?.username || 'Warrior'}.</p>
           </div>
           <div className="flex items-center gap-2 rounded-full bg-zinc-900 px-3 py-1 border border-zinc-800 hover:bg-zinc-800 transition-colors">
             <Link href="/profile" className="flex items-center gap-2">
