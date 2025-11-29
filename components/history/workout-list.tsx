@@ -21,7 +21,7 @@ export function WorkoutList({ workouts }: WorkoutListProps) {
     if (workouts.length === 0) {
         return (
             <div className="text-center py-8 text-zinc-500">
-                No workouts logged yet. Time to grind!
+                No workout logged yet. Time to grind!
             </div>
         )
     }
