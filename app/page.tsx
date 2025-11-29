@@ -110,7 +110,7 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-2xl space-y-8">
         <header className="flex items-center justify-between">
           <div>
-            <div className="relative h-9 w-[7.5rem] mb-1">
+            <div className="relative h-12 w-40 mb-1">
               <Image
                 src="/99grindlogo.png"
                 alt="99Grind Logo"
