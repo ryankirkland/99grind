@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Dumbbell, Plus, History, Trophy } from 'lucide-react'
 import { StreakTracker } from '@/components/history/streak-tracker'
 import { Calendar } from '@/components/history/calendar'
@@ -109,10 +110,16 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-2xl space-y-8">
         <header className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-              99Grind
-            </h1>
-            <p className="text-zinc-400">Welcome back, {profile?.username || 'Warrior'}.</p>
+            <div className="relative h-12 w-40 mb-1">
+              <Image
+                src="/99grindlogo.png"
+                alt="99Grind Logo"
+                fill
+                className="object-contain object-left"
+                priority
+              />
+            </div>
+            <p className="text-zinc-400 text-sm">Welcome back, {profile?.username || 'Warrior'}.</p>
           </div>
           <div className="flex items-center gap-2 rounded-full bg-zinc-900 px-3 py-1 border border-zinc-800 hover:bg-zinc-800 transition-colors">
             <Link href="/profile" className="flex items-center gap-2">

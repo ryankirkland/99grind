@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { login, signup } from '@/app/auth/actions'
 
 export default function LoginPage({
@@ -8,13 +9,16 @@ export default function LoginPage({
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-black text-white selection:bg-emerald-500/30">
             <div className="w-full max-w-md space-y-8 px-4 sm:px-0">
-                <div className="text-center">
-                    <h1 className="text-4xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                        99Grind
-                    </h1>
-                    <p className="mt-2 text-sm text-zinc-400">
-                        Level up your fitness journey.
-                    </p>
+                <div className="flex justify-center mb-8">
+                    <div className="relative h-16 w-64">
+                        <Image
+                            src="/99grindlogo.png"
+                            alt="99Grind Logo"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                 </div>
 
                 <form className="group relative z-0 flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 backdrop-blur-xl transition-all hover:border-zinc-700">
