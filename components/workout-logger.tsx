@@ -210,8 +210,13 @@ export function WorkoutLogger({
                 setIsSaving(false)
                 return
             }
-            // Force full page reload to show updated template
-            window.location.href = '/workouts/new'
+            // Show success message
+            alert('Template updated successfully!')
+            // Force cache refresh and navigate
+            router.refresh()
+            setTimeout(() => {
+                window.location.href = '/workouts/new'
+            }, 100)
             return
         }
 
