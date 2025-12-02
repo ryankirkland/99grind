@@ -348,6 +348,7 @@ export async function updateWorkoutTemplate(templateId: string, templateData: Wo
     }
 
     // 1. Update Template Details
+    console.log('Updating template:', templateId, 'with name:', templateData.name, 'type:', templateData.type)
     const { error: updateError } = await supabase
         .from('workout_templates')
         .update({
