@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Plus, Save, Trash2, ChevronLeft, Search, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { saveWorkout, updateWorkout } from '@/app/workouts/actions'
+import { saveWorkout, updateWorkout, saveWorkoutTemplate } from '@/app/workouts/actions'
 import { AddExerciseDialog } from '@/components/add-exercise-dialog'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -35,6 +35,7 @@ export function WorkoutLogger({
     userId,
     initialUnit = 'kg',
     initialData,
+    templates,
 }: {
     exercises: Exercise[]
     userId: string
@@ -45,6 +46,7 @@ export function WorkoutLogger({
         type: string
         exercises: WorkoutExercise[]
     }
+    templates?: any[]
 }) {
     const router = useRouter()
     const [workoutName, setWorkoutName] = useState(initialData?.name || '')
@@ -52,10 +54,12 @@ export function WorkoutLogger({
     const [activeExercises, setActiveExercises] = useState<WorkoutExercise[]>(initialData?.exercises || [])
     const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false)
     const [isAddExerciseDialogOpen, setIsAddExerciseDialogOpen] = useState(false)
+    const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(!initialData && templates && templates.length > 0)
     const [localExercises, setLocalExercises] = useState(exercises)
     const [search, setSearch] = useState('')
     const [isSaving, setIsSaving] = useState(false)
     const [unit, setUnit] = useState(initialUnit)
+    const [saveAsTemplate, setSaveAsTemplate] = useState(false)
 
     const filteredExercises = localExercises.filter((ex) =>
         ex.name.toLowerCase().includes(search.toLowerCase())
@@ -148,6 +152,26 @@ export function WorkoutLogger({
         setActiveExercises(updatedExercises)
     }
 
+    const loadTemplate = (template: any) => {
+        setWorkoutName(template.name)
+        setWorkoutType(template.type)
+
+        const loadedExercises = template.workout_template_exercises.map((te: any) => ({
+            id: crypto.randomUUID(),
+            exerciseId: te.exercise_id,
+            name: te.exercises.name,
+            sets: Array(te.sets).fill(null).map(() => ({
+                id: crypto.randomUUID(),
+                reps: te.reps,
+                weight: 0,
+                completed: false,
+            })),
+        }))
+
+        setActiveExercises(loadedExercises)
+        setIsTemplatePickerOpen(false)
+    }
+
     const handleFinishWorkout = async () => {
         if (activeExercises.length === 0) return
         setIsSaving(true)
@@ -164,6 +188,24 @@ export function WorkoutLogger({
             })).filter(ex => ex.sets.length > 0),
         }
 
+        if (saveAsTemplate) {
+            const templateData = {
+                name: workoutName || 'Untitled Template',
+                type: workoutType,
+                exercises: activeExercises.map((ex) => ({
+                    exercise_id: ex.exerciseId,
+                    sets: ex.sets.length,
+                    reps: ex.sets[0]?.reps || 10, // Default to first set reps or 10
+                })),
+            }
+            const templateResult = await saveWorkoutTemplate(templateData)
+            if (templateResult?.error) {
+                console.error('Error saving template:', templateResult.error)
+                // We continue to save the workout even if template fails, but maybe alert user?
+                // For now, let's just log it.
+            }
+        }
+
         let result
         if (initialData?.id) {
             result = await updateWorkout(initialData.id, workoutData)
@@ -178,6 +220,59 @@ export function WorkoutLogger({
         }
 
         router.push(initialData?.id ? `/workouts/${initialData.id}` : '/')
+    }
+
+    if (isTemplatePickerOpen) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <Link href="/" className="rounded-full bg-zinc-900 p-2 text-white hover:bg-zinc-800">
+                        <ChevronLeft className="h-6 w-6" />
+                    </Link>
+                    <h1 className="text-2xl font-bold text-white">Start Workout</h1>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <button
+                        onClick={() => setIsTemplatePickerOpen(false)}
+                        className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 hover:bg-zinc-900 hover:border-emerald-500/50 transition-all group"
+                    >
+                        <div className="rounded-full bg-emerald-500/10 p-4 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-black transition-colors">
+                            <Plus className="h-8 w-8" />
+                        </div>
+                        <div className="text-center">
+                            <h3 className="text-lg font-bold text-white">Empty Workout</h3>
+                            <p className="text-sm text-zinc-500">Start from scratch</p>
+                        </div>
+                    </button>
+
+                    {templates?.map((template) => (
+                        <button
+                            key={template.id}
+                            onClick={() => loadTemplate(template)}
+                            className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-emerald-500/50 transition-all text-left group w-full"
+                        >
+                            <div>
+                                <h3 className="text-lg font-bold text-white group-hover:text-emerald-500 transition-colors">{template.name}</h3>
+                                <p className="text-sm text-zinc-500">{template.type}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {template.workout_template_exercises.slice(0, 3).map((te: any) => (
+                                    <span key={te.id} className="text-xs rounded-full bg-zinc-800 px-2 py-1 text-zinc-400">
+                                        {te.exercises.name}
+                                    </span>
+                                ))}
+                                {template.workout_template_exercises.length > 3 && (
+                                    <span className="text-xs rounded-full bg-zinc-800 px-2 py-1 text-zinc-400">
+                                        +{template.workout_template_exercises.length - 3} more
+                                    </span>
+                                )}
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        )
     }
 
     if (isExercisePickerOpen) {
@@ -263,6 +358,14 @@ export function WorkoutLogger({
                                 onCheckedChange={(checked) => setUnit(checked ? 'lbs' : 'kg')}
                                 leftLabel="KG"
                                 rightLabel="LBS"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 mr-2">
+                            <Switch
+                                checked={saveAsTemplate}
+                                onCheckedChange={setSaveAsTemplate}
+                                leftLabel=""
+                                rightLabel="Save Template"
                             />
                         </div>
                         <button

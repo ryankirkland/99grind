@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { WorkoutLogger } from '@/components/workout-logger'
 import { redirect } from 'next/navigation'
+import { getWorkoutTemplates } from '@/app/workouts/actions'
 
 export default async function NewWorkoutPage() {
     const supabase = await createClient()
@@ -24,6 +25,8 @@ export default async function NewWorkoutPage() {
         .eq('id', user.id)
         .single()
 
+    const templates = await getWorkoutTemplates()
+
     return (
         <div className="min-h-screen bg-black p-4 pb-20 sm:p-8">
             <div className="mx-auto max-w-3xl">
@@ -31,6 +34,7 @@ export default async function NewWorkoutPage() {
                     exercises={exercises || []}
                     userId={user.id}
                     initialUnit={profile?.weight_unit || 'kg'}
+                    templates={templates}
                 />
             </div>
         </div>

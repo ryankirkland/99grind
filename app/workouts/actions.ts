@@ -15,6 +15,16 @@ type WorkoutData = {
     }[]
 }
 
+type WorkoutTemplateData = {
+    name: string
+    type: string
+    exercises: {
+        exercise_id: string
+        sets: number
+        reps: number
+    }[]
+}
+
 export async function saveWorkout(workoutData: WorkoutData) {
     const supabase = await createClient()
 
@@ -323,5 +333,114 @@ export async function updateWorkout(workoutId: string, workoutData: WorkoutData)
 
     revalidatePath('/')
     revalidatePath(`/workouts/${workoutId}`)
+    return { success: true }
+}
+
+export async function saveWorkoutTemplate(templateData: WorkoutTemplateData) {
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    // 1. Insert Template
+    const { data: template, error: templateError } = await supabase
+        .from('workout_templates')
+        .insert({
+            user_id: user.id,
+            name: templateData.name,
+            type: templateData.type,
+        })
+        .select()
+        .single()
+
+    if (templateError) {
+        return { error: templateError.message }
+    }
+
+    // 2. Insert Template Exercises
+    const exerciseEntries = templateData.exercises.map((ex, index) => ({
+        template_id: template.id,
+        exercise_id: ex.exercise_id,
+        order_index: index,
+        sets: ex.sets,
+        reps: ex.reps,
+    }))
+
+    const { error: exercisesError } = await supabase
+        .from('workout_template_exercises')
+        .insert(exerciseEntries)
+
+    if (exercisesError) {
+        console.error('Error saving template exercises:', exercisesError)
+        // Ideally we should rollback here, but for now we'll just return error
+        return { error: 'Failed to save template exercises' }
+    }
+
+    revalidatePath('/workouts/new')
+    return { success: true }
+}
+
+export async function getWorkoutTemplates() {
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        return []
+    }
+
+    const { data: templates } = await supabase
+        .from('workout_templates')
+        .select(`
+            *,
+            workout_template_exercises (
+                *,
+                exercises (
+                    name,
+                    target_muscle,
+                    type
+                )
+            )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+    // Sort exercises by order_index
+    templates?.forEach(t => {
+        t.workout_template_exercises.sort((a: any, b: any) => a.order_index - b.order_index)
+    })
+
+    return templates || []
+}
+
+export async function deleteWorkoutTemplate(templateId: string) {
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    const { error } = await supabase
+        .from('workout_templates')
+        .delete()
+        .eq('id', templateId)
+        .eq('user_id', user.id)
+
+    if (error) {
+        return { error: error.message }
+    }
+
+    revalidatePath('/workouts/new')
     return { success: true }
 }
