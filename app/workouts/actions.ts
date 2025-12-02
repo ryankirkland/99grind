@@ -362,6 +362,15 @@ export async function updateWorkoutTemplate(templateId: string, templateData: Wo
         return { error: updateError.message }
     }
 
+    // Verify the update persisted
+    const { data: verifyData } = await supabase
+        .from('workout_templates')
+        .select('name, type')
+        .eq('id', templateId)
+        .single()
+
+    console.log('After update, database shows:', verifyData)
+
     // 2. Replace Template Exercises
     // First delete existing exercises
     const { error: deleteError } = await supabase
@@ -477,6 +486,11 @@ export async function getWorkoutTemplates() {
     })
 
     console.log('Fetched templates for user:', user.id, templates)
+
+    // Log each template name for debugging
+    templates?.forEach(t => {
+        console.log('Template:', t.id, 'name:', t.name)
+    })
 
     return templates || []
 }
