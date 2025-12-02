@@ -3,6 +3,9 @@ import { WorkoutLogger } from '@/components/workout-logger'
 import { redirect } from 'next/navigation'
 import { getWorkoutTemplates } from '@/app/workouts/actions'
 
+// Force dynamic rendering to always fetch fresh data
+export const dynamic = 'force-dynamic'
+
 export default async function NewWorkoutPage() {
     const supabase = await createClient()
 
