@@ -336,6 +336,64 @@ export async function updateWorkout(workoutId: string, workoutData: WorkoutData)
     return { success: true }
 }
 
+export async function updateWorkoutTemplate(templateId: string, templateData: WorkoutTemplateData) {
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    // 1. Update Template Details
+    const { error: updateError } = await supabase
+        .from('workout_templates')
+        .update({
+            name: templateData.name,
+            type: templateData.type,
+        })
+        .eq('id', templateId)
+        .eq('user_id', user.id)
+
+    if (updateError) {
+        return { error: updateError.message }
+    }
+
+    // 2. Replace Template Exercises
+    // First delete existing exercises
+    const { error: deleteError } = await supabase
+        .from('workout_template_exercises')
+        .delete()
+        .eq('template_id', templateId)
+
+    if (deleteError) {
+        return { error: 'Failed to update template exercises (delete failed)' }
+    }
+
+    // Then insert new ones
+    const exerciseEntries = templateData.exercises.map((ex, index) => ({
+        template_id: templateId,
+        exercise_id: ex.exercise_id,
+        order_index: index,
+        sets: ex.sets,
+        reps: ex.reps,
+    }))
+
+    const { error: insertError } = await supabase
+        .from('workout_template_exercises')
+        .insert(exerciseEntries)
+
+    if (insertError) {
+        console.error('Error updating template exercises:', insertError)
+        return { error: 'Failed to update template exercises (insert failed)' }
+    }
+
+    revalidatePath('/workouts/new')
+    return { success: true }
+}
+
 export async function saveWorkoutTemplate(templateData: WorkoutTemplateData) {
     const supabase = await createClient()
 
@@ -416,6 +474,8 @@ export async function getWorkoutTemplates() {
     templates?.forEach(t => {
         t.workout_template_exercises.sort((a: any, b: any) => a.order_index - b.order_index)
     })
+
+    console.log('Fetched templates for user:', user.id, templates)
 
     return templates || []
 }

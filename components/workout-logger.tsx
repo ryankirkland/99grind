@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Plus, Save, Trash2, ChevronLeft, Search, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { saveWorkout, updateWorkout, saveWorkoutTemplate } from '@/app/workouts/actions'
+import { saveWorkout, updateWorkout, saveWorkoutTemplate, deleteWorkoutTemplate, updateWorkoutTemplate } from '@/app/workouts/actions'
 import { AddExerciseDialog } from '@/components/add-exercise-dialog'
+import { Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { Switch } from '@/components/ui/switch'
@@ -60,6 +61,7 @@ export function WorkoutLogger({
     const [isSaving, setIsSaving] = useState(false)
     const [unit, setUnit] = useState(initialUnit)
     const [saveAsTemplate, setSaveAsTemplate] = useState(false)
+    const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
 
     const filteredExercises = localExercises.filter((ex) =>
         ex.name.toLowerCase().includes(search.toLowerCase())
@@ -172,9 +174,45 @@ export function WorkoutLogger({
         setIsTemplatePickerOpen(false)
     }
 
+    const handleDeleteTemplate = async (e: React.MouseEvent, templateId: string) => {
+        e.stopPropagation()
+        if (confirm('Are you sure you want to delete this template?')) {
+            await deleteWorkoutTemplate(templateId)
+            router.refresh()
+        }
+    }
+
+    const handleEditTemplate = (e: React.MouseEvent, template: any) => {
+        e.stopPropagation()
+        setEditingTemplateId(template.id)
+        loadTemplate(template)
+    }
+
     const handleFinishWorkout = async () => {
         if (activeExercises.length === 0) return
         setIsSaving(true)
+
+        // If editing template, handle separately
+        if (editingTemplateId) {
+            const templateData = {
+                name: workoutName || 'Untitled Template',
+                type: workoutType,
+                exercises: activeExercises.map((ex) => ({
+                    exercise_id: ex.exerciseId,
+                    sets: ex.sets.length,
+                    reps: ex.sets[0]?.reps || 10,
+                })),
+            }
+            const result = await updateWorkoutTemplate(editingTemplateId, templateData)
+            if (result?.error) {
+                alert(`Error updating template: ${result.error}`)
+                setIsSaving(false)
+                return
+            }
+            router.refresh()
+            window.location.reload()
+            return
+        }
 
         const workoutData = {
             name: workoutName || 'Untitled Workout',
@@ -250,11 +288,27 @@ export function WorkoutLogger({
                         <button
                             key={template.id}
                             onClick={() => loadTemplate(template)}
-                            className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-emerald-500/50 transition-all text-left group w-full"
+                            className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-emerald-500/50 transition-all text-left group w-full relative"
                         >
-                            <div>
-                                <h3 className="text-lg font-bold text-white group-hover:text-emerald-500 transition-colors">{template.name}</h3>
-                                <p className="text-sm text-zinc-500">{template.type}</p>
+                            <div className="w-full flex justify-between items-start">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white group-hover:text-emerald-500 transition-colors">{template.name}</h3>
+                                    <p className="text-sm text-zinc-500">{template.type}</p>
+                                </div>
+                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div
+                                        onClick={(e) => handleEditTemplate(e, template)}
+                                        className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full transition-colors"
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </div>
+                                    <div
+                                        onClick={(e) => handleDeleteTemplate(e, template.id)}
+                                        className="p-2 text-zinc-400 hover:text-red-500 hover:bg-zinc-800 rounded-full transition-colors"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {template.workout_template_exercises.slice(0, 3).map((te: any) => (
@@ -360,21 +414,23 @@ export function WorkoutLogger({
                                 rightLabel="LBS"
                             />
                         </div>
-                        <div className="flex items-center gap-2 mr-2">
-                            <Switch
-                                checked={saveAsTemplate}
-                                onCheckedChange={setSaveAsTemplate}
-                                leftLabel=""
-                                rightLabel="Save Template"
-                            />
-                        </div>
+                        {!editingTemplateId && (
+                            <div className="flex items-center gap-2 mr-2">
+                                <Switch
+                                    checked={saveAsTemplate}
+                                    onCheckedChange={setSaveAsTemplate}
+                                    leftLabel=""
+                                    rightLabel="Save Template"
+                                />
+                            </div>
+                        )}
                         <button
                             onClick={handleFinishWorkout}
                             disabled={isSaving || activeExercises.length === 0}
                             className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-50 transition-colors"
                         >
                             <Save className="h-4 w-4" />
-                            <span>{isSaving ? 'Saving...' : 'Finish'}</span>
+                            <span>{isSaving ? 'Saving...' : (editingTemplateId ? 'Save Changes' : 'Finish')}</span>
                         </button>
                     </div>
                 </div>
