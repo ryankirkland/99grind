@@ -212,11 +212,9 @@ export function WorkoutLogger({
             }
             // Show success message
             alert('Template updated successfully!')
-            // Force cache refresh and navigate
-            router.refresh()
-            setTimeout(() => {
-                window.location.href = '/workouts/new'
-            }, 100)
+            // Force cache refresh with timestamp to bust Vercel cache
+            const timestamp = new Date().getTime()
+            window.location.href = `/workouts/new?t=${timestamp}`
             return
         }
 
