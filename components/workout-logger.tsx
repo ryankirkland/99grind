@@ -209,8 +209,8 @@ export function WorkoutLogger({
                 setIsSaving(false)
                 return
             }
-            // Navigate back to template picker to see the updated template
-            router.push('/workouts/new')
+            // Force full page reload to show updated template
+            window.location.href = '/workouts/new'
             return
         }
 
