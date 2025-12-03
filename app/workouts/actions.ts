@@ -348,7 +348,6 @@ export async function updateWorkoutTemplate(templateId: string, templateData: Wo
     }
 
     // 1. Update Template Details
-    console.log('Updating template:', templateId, 'with name:', templateData.name, 'type:', templateData.type)
     const { error: updateError } = await supabase
         .from('workout_templates')
         .update({
@@ -361,15 +360,6 @@ export async function updateWorkoutTemplate(templateId: string, templateData: Wo
     if (updateError) {
         return { error: updateError.message }
     }
-
-    // Verify the update persisted
-    const { data: verifyData } = await supabase
-        .from('workout_templates')
-        .select('name, type')
-        .eq('id', templateId)
-        .single()
-
-    console.log('After update, database shows:', verifyData)
 
     // 2. Replace Template Exercises
     // First delete existing exercises
@@ -483,13 +473,6 @@ export async function getWorkoutTemplates() {
     // Sort exercises by order_index
     templates?.forEach(t => {
         t.workout_template_exercises.sort((a: any, b: any) => a.order_index - b.order_index)
-    })
-
-    console.log('Fetched templates for user:', user.id, templates)
-
-    // Log each template name for debugging
-    templates?.forEach(t => {
-        console.log('Template:', t.id, 'name:', t.name)
     })
 
     return templates || []

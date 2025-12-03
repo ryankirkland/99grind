@@ -203,7 +203,6 @@ export function WorkoutLogger({
                     reps: ex.sets[0]?.reps || 10,
                 })),
             }
-            console.log('Updating template with data:', templateData)
             const result = await updateWorkoutTemplate(editingTemplateId, templateData)
             if (result?.error) {
                 alert(`Error updating template: ${result.error}`)
