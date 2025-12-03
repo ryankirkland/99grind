@@ -69,8 +69,18 @@ export async function resetPassword(formData: FormData) {
     const supabase = await createClient()
     const email = formData.get('email') as string
 
+    // Get the base URL dynamically or from env
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+    if (!baseUrl) {
+        const { headers } = await import('next/headers')
+        const headersList = await headers()
+        const host = headersList.get('host')
+        const protocol = headersList.get('x-forwarded-proto') || 'http'
+        baseUrl = `${protocol}://${host}`
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback?next=/update-password`,
+        redirectTo: `${baseUrl}/auth/callback?next=/update-password`,
     })
 
     if (error) {
