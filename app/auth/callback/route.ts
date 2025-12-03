@@ -1,4 +1,3 @@
-```typescript
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import fs from 'fs'
@@ -12,26 +11,30 @@ export async function GET(request: Request) {
 
     const logFile = path.join(process.cwd(), 'debug.log')
     const log = (msg: string) => {
-        fs.appendFileSync(logFile, `${ new Date().toISOString() } - ${ msg } \n`)
+        try {
+            fs.appendFileSync(logFile, `${new Date().toISOString()} - ${msg}\n`)
+        } catch (e) {
+            console.error('Failed to write to log file:', e)
+        }
     }
 
-    log(`Auth Callback Debug: `)
-    log(` - URL: ${ request.url } `)
-    log(` - Code present: ${ !!code } `)
-    log(` - Next path: ${ next } `)
-    log(` - NEXT_PUBLIC_BASE_URL: ${ process.env.NEXT_PUBLIC_BASE_URL } `)
+    log(`Auth Callback Debug:`)
+    log(` - URL: ${request.url}`)
+    log(` - Code present: ${!!code}`)
+    log(` - Next path: ${next}`)
+    log(` - NEXT_PUBLIC_BASE_URL: ${process.env.NEXT_PUBLIC_BASE_URL}`)
 
     if (code) {
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
-        
+
         if (error) {
-            log(` - Exchange Error: ${ JSON.stringify(error) } `)
+            log(` - Exchange Error: ${JSON.stringify(error)}`)
             console.error(' - Exchange Error:', error)
         } else {
             log(` - Session exchanged successfully`)
             console.log(' - Session exchanged successfully')
-            return NextResponse.redirect(`${ origin }${ next } `)
+            return NextResponse.redirect(`${origin}${next}`)
         }
     } else {
         log(` - No code found in params`)
@@ -39,6 +42,5 @@ export async function GET(request: Request) {
     }
 
     // return the user to an error page with instructions
-    return NextResponse.redirect(`${ origin } /auth/auth - code - error`)
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }
-```
