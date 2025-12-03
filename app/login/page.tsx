@@ -1,11 +1,13 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { login, signup } from '@/app/auth/actions'
 
-export default function LoginPage({
+export default async function LoginPage({
     searchParams,
 }: {
-    searchParams: { message: string }
+    searchParams: Promise<{ message?: string }>
 }) {
+    const params = await searchParams
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-black text-white selection:bg-emerald-500/30">
             <div className="w-full max-w-md space-y-8 px-4 sm:px-0">
@@ -65,6 +67,11 @@ export default function LoginPage({
                             placeholder="••••••••"
                             required
                         />
+                        <div className="flex justify-end">
+                            <Link href="/forgot-password" className="text-xs text-zinc-500 hover:text-emerald-400 transition-colors">
+                                Forgot Password?
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="flex flex-col gap-3 pt-4">
@@ -82,9 +89,9 @@ export default function LoginPage({
                         </button>
                     </div>
 
-                    {searchParams?.message && (
+                    {params?.message && (
                         <p className="mt-4 text-center text-sm text-red-400">
-                            {searchParams.message}
+                            {params.message}
                         </p>
                     )}
                 </form>

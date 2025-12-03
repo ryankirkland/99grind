@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { signOut } from '@/app/auth/actions'
 import { Avatar } from '@/components/avatar'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -93,6 +94,14 @@ export default async function ProfilePage() {
                                 </button>
                             </div>
                         </div>
+                    </form>
+                </div>
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+                    <h3 className="mb-4 text-lg font-bold text-white">Account</h3>
+                    <form action={signOut}>
+                        <button className="w-full rounded-lg border border-red-900/50 bg-red-900/20 px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-900/30 hover:text-red-300 transition-colors">
+                            Sign Out
+                        </button>
                     </form>
                 </div>
             </div>
