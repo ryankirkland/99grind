@@ -11,6 +11,10 @@ type WorkoutData = {
         sets: {
             reps: number
             weight: number
+            time?: string
+            distance?: number
+            speed?: number
+            resistance?: number
         }[]
     }[]
 }
@@ -84,7 +88,11 @@ export async function saveWorkout(workoutData: WorkoutData) {
             exercise_id: ex.exercise_id,
             sets: 1,
             reps: set.reps,
-            weight: set.weight
+            weight: set.weight,
+            time: set.time,
+            distance: set.distance,
+            speed: set.speed,
+            resistance: set.resistance
         }))
     )
 
@@ -398,7 +406,11 @@ export async function updateWorkout(workoutId: string, workoutData: WorkoutData)
                 exercise_id: ex.exercise_id,
                 sets: 1,
                 reps: set.reps,
-                weight: set.weight
+                weight: set.weight,
+                time: set.time,
+                distance: set.distance,
+                speed: set.speed,
+                resistance: set.resistance
             }))
         )
 

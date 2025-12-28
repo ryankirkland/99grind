@@ -9,6 +9,7 @@ import { Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { Switch } from '@/components/ui/switch'
+import { TimeInput } from '@/components/time-input'
 
 type Exercise = {
     id: string
@@ -21,6 +22,10 @@ export type WorkoutSet = {
     id: string
     reps: number
     weight: number
+    time?: string
+    distance?: number
+    speed?: number
+    resistance?: number
     completed: boolean
 }
 
@@ -87,7 +92,16 @@ export function WorkoutLogger({
             exerciseId: exercise.id,
             name: exercise.name,
             sets: [
-                { id: crypto.randomUUID(), reps: 0, weight: 0, completed: false },
+                {
+                    id: crypto.randomUUID(),
+                    reps: 0,
+                    weight: 0,
+                    time: '',
+                    distance: 0,
+                    speed: 0,
+                    resistance: 0,
+                    completed: false
+                },
             ],
         }
         setActiveExercises([...activeExercises, newExercise])
@@ -108,6 +122,10 @@ export function WorkoutLogger({
             id: crypto.randomUUID(),
             reps: previousSet ? previousSet.reps : 0,
             weight: previousSet ? previousSet.weight : 0,
+            time: previousSet ? previousSet.time : '',
+            distance: previousSet ? previousSet.distance : 0,
+            speed: previousSet ? previousSet.speed : 0,
+            resistance: previousSet ? previousSet.resistance : 0,
             completed: false,
         })
         setActiveExercises(updatedExercises)
@@ -116,21 +134,14 @@ export function WorkoutLogger({
     const updateSet = (
         exerciseIndex: number,
         setIndex: number,
-        field: 'reps' | 'weight',
-        value: number
+        field: keyof WorkoutSet,
+        value: string | number | boolean
     ) => {
         const updatedExercises = [...activeExercises]
-        if (field === 'weight') {
-            // Store the raw input value in the state for now, but we need to handle the conversion when saving/displaying.
-            // Actually, let's store the KG value in state always to avoid drift?
-            // No, if user types 100 lbs, we should store ~45.35kg.
-            // But if they type 100, they expect to see 100.
-            // So we should probably store the *display value* in a local state or just convert on input?
-            // If we store KG, then 45.35kg -> 99.99lbs. User sees 99.99.
-            // Let's store KG in the main state, but we need to be careful with inputs.
-            // Better approach for inputs: Convert immediately to KG for state.
+        if (field === 'weight' && typeof value === 'number') {
             updatedExercises[exerciseIndex].sets[setIndex][field] = toStorage(value)
         } else {
+            // @ts-ignore - dynamic assignment
             updatedExercises[exerciseIndex].sets[setIndex][field] = value
         }
         setActiveExercises(updatedExercises)
@@ -473,16 +484,41 @@ export function WorkoutLogger({
                         </div>
 
                         <div className="space-y-3">
-                            <div className="grid grid-cols-10 gap-2 text-xs font-medium uppercase text-zinc-500 mb-2">
+                            <div className={cn(
+                                "grid gap-2 text-xs font-medium uppercase text-zinc-500 mb-2",
+                                workoutType === 'Cardio' ? "grid-cols-12" : "grid-cols-10"
+                            )}>
                                 <div className="col-span-1 text-center">Set</div>
-                                <div className="col-span-3 text-center">{unit}</div>
-                                <div className="col-span-3 text-center">Reps</div>
+                                {workoutType === 'Strength' && (
+                                    <>
+                                        <div className="col-span-3 text-center">{unit}</div>
+                                        <div className="col-span-3 text-center">Reps</div>
+                                    </>
+                                )}
+                                {workoutType === 'Cardio' && (
+                                    <>
+                                        <div className="col-span-2 text-center">Time</div>
+                                        <div className="col-span-2 text-center">Dist (km)</div>
+                                        <div className="col-span-2 text-center">Spd (km/h)</div>
+                                        <div className="col-span-2 text-center">Resist</div>
+                                    </>
+                                )}
+                                {workoutType === 'Flexibility' && (
+                                    <>
+                                        <div className="col-span-3 text-center">Time</div>
+                                        <div className="col-span-3 text-center">Reps</div>
+                                    </>
+                                )}
+                                {workoutType === 'Mindfulness' && (
+                                    <div className="col-span-6 text-center">Time</div>
+                                )}
                                 <div className="col-span-3 text-center">Done</div>
                             </div>
 
                             {exercise.sets.map((set, setIndex) => (
                                 <div key={set.id} className={cn(
-                                    "grid grid-cols-10 gap-2 items-center",
+                                    "grid gap-2 items-center",
+                                    workoutType === 'Cardio' ? "grid-cols-12" : "grid-cols-10",
                                     set.completed && "opacity-50"
                                 )}>
                                     <div className="col-span-1 flex items-center justify-center">
@@ -490,32 +526,97 @@ export function WorkoutLogger({
                                             {setIndex + 1}
                                         </span>
                                     </div>
-                                    <div className="col-span-3">
-                                        <input
-                                            type="number"
-                                            // We display the converted value.
-                                            // Note: This can be tricky with controlled inputs and rounding.
-                                            // For a robust app, we'd use a separate display state or a specialized hook.
-                                            // For this MVP, we'll calculate on render but this might cause cursor jumps or rounding weirdness on edit.
-                                            // A better way for the input is to use `defaultValue` or manage a local string state for the input.
-                                            // Let's try to just use the value. If user types 100, we store 45.35. Next render displays 100.
-                                            // If they type 100.5, we store 45.58. Next render displays 100.5.
-                                            // It should be fine as long as toDisplay(toStorage(x)) ~= x.
-                                            value={set.weight ? toDisplay(set.weight) : ''}
-                                            onChange={(e) => updateSet(exerciseIndex, setIndex, 'weight', parseFloat(e.target.value))}
-                                            className="w-full rounded-lg bg-black/50 px-2 py-2 text-center text-sm text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div className="col-span-3">
-                                        <input
-                                            type="number"
-                                            value={set.reps || ''}
-                                            onChange={(e) => updateSet(exerciseIndex, setIndex, 'reps', parseFloat(e.target.value))}
-                                            className="w-full rounded-lg bg-black/50 px-2 py-2 text-center text-sm text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                                            placeholder="0"
-                                        />
-                                    </div>
+
+                                    {workoutType === 'Strength' && (
+                                        <>
+                                            <div className="col-span-3">
+                                                <input
+                                                    type="number"
+                                                    value={set.weight ? toDisplay(set.weight) : ''}
+                                                    onChange={(e) => updateSet(exerciseIndex, setIndex, 'weight', parseFloat(e.target.value))}
+                                                    className="w-full rounded-lg bg-black/50 px-2 py-2 text-center text-sm text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                            <div className="col-span-3">
+                                                <input
+                                                    type="number"
+                                                    value={set.reps || ''}
+                                                    onChange={(e) => updateSet(exerciseIndex, setIndex, 'reps', parseFloat(e.target.value))}
+                                                    className="w-full rounded-lg bg-black/50 px-2 py-2 text-center text-sm text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {workoutType === 'Cardio' && (
+                                        <>
+                                            <div className="col-span-2">
+                                                <TimeInput
+                                                    value={set.time || '00:00:00'}
+                                                    onChange={(val) => updateSet(exerciseIndex, setIndex, 'time', val)}
+                                                />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <input
+                                                    type="number"
+                                                    value={set.distance || ''}
+                                                    onChange={(e) => updateSet(exerciseIndex, setIndex, 'distance', parseFloat(e.target.value))}
+                                                    className="w-full rounded-lg bg-black/50 px-2 py-2 text-center text-sm text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <input
+                                                    type="number"
+                                                    value={set.speed || ''}
+                                                    onChange={(e) => updateSet(exerciseIndex, setIndex, 'speed', parseFloat(e.target.value))}
+                                                    className="w-full rounded-lg bg-black/50 px-2 py-2 text-center text-sm text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <input
+                                                    type="number"
+                                                    value={set.resistance || ''}
+                                                    onChange={(e) => updateSet(exerciseIndex, setIndex, 'resistance', parseFloat(e.target.value))}
+                                                    className="w-full rounded-lg bg-black/50 px-2 py-2 text-center text-sm text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {workoutType === 'Flexibility' && (
+                                        <>
+                                            <div className="col-span-3">
+                                                <TimeInput
+                                                    value={set.time || '00:00:00'}
+                                                    onChange={(val) => updateSet(exerciseIndex, setIndex, 'time', val)}
+                                                />
+                                            </div>
+                                            <div className="col-span-3">
+                                                <input
+                                                    type="number"
+                                                    value={set.reps || ''}
+                                                    onChange={(e) => updateSet(exerciseIndex, setIndex, 'reps', parseFloat(e.target.value))}
+                                                    className="w-full rounded-lg bg-black/50 px-2 py-2 text-center text-sm text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {workoutType === 'Mindfulness' && (
+                                        <div className="col-span-6">
+                                            <TimeInput
+                                                value={set.time || '00:00:00'}
+                                                onChange={(val) => updateSet(exerciseIndex, setIndex, 'time', val)}
+                                            />
+                                        </div>
+                                    )}
+
                                     <div className="col-span-3 flex justify-center gap-2">
                                         <button
                                             onClick={() => toggleSetCompletion(exerciseIndex, setIndex)}
