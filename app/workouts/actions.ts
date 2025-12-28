@@ -202,6 +202,82 @@ export async function logRestDay() {
     return { success: true }
 }
 
+export async function undoRestDay() {
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    // 1. Find today's rest day workout
+    // Fetch recent rest days and filter in JS to match UI logic exactly
+    const { data: recentRestDays, error: fetchError } = await supabase
+        .from('workouts')
+        .select('id, total_xp_earned, started_at')
+        .eq('user_id', user.id)
+        .eq('type', 'Rest')
+        .order('started_at', { ascending: false })
+        .limit(10)
+
+    if (fetchError) {
+        console.log('[UNDO_DEBUG] Fetch error:', fetchError.message)
+        return { error: 'Failed to fetch workouts' }
+    }
+
+    const { isSameDay } = await import('date-fns')
+    const today = new Date()
+    const restDayWorkout = recentRestDays?.find(w => isSameDay(new Date(w.started_at), today))
+
+    if (!restDayWorkout) {
+        console.log('[UNDO_DEBUG] No rest day found for today in recent workouts')
+        return { error: 'No rest day found to undo' }
+    }
+
+    console.log('[UNDO_DEBUG] Found workout to undo:', restDayWorkout.id)
+
+    // 2. Delete the workout
+    const { error: deleteError } = await supabase
+        .from('workouts')
+        .delete()
+        .eq('id', restDayWorkout.id)
+
+    if (deleteError) {
+        return { error: deleteError.message }
+    }
+
+    // 3. Revert Profile Stats
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('stats, current_xp, level')
+        .eq('id', user.id)
+        .single()
+
+    if (profile) {
+        const currentStats = (profile.stats as Record<string, number>) || {}
+        const newStats = { ...currentStats }
+        newStats['rest_days'] = Math.max(0, (newStats['rest_days'] || 0) - 1)
+
+        const newXP = Math.max(0, (profile.current_xp || 0) - restDayWorkout.total_xp_earned)
+        const newLevel = 1 + Math.floor(newXP / 1000)
+
+        await supabase
+            .from('profiles')
+            .update({
+                stats: newStats,
+                current_xp: newXP,
+                level: newLevel,
+            })
+            .eq('id', user.id)
+    }
+
+    revalidatePath('/')
+    return { success: true }
+}
+
 export async function updateWorkout(workoutId: string, workoutData: WorkoutData) {
     const supabase = await createClient()
 

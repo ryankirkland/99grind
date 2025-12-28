@@ -43,6 +43,8 @@ export default async function DashboardPage() {
 
   // Check if worked out today
   const workedOutToday = workoutDates.some(d => isSameDay(d, today))
+  const isRestDayToday = workouts?.some(w => isSameDay(new Date(w.started_at), today) && w.type === 'Rest') || false
+
   if (workedOutToday) {
     dayStreak = 1
     checkDate = subDays(today, 1)
@@ -149,7 +151,7 @@ export default async function DashboardPage() {
             <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-white/10 blur-2xl transition-all group-hover:bg-white/20" />
           </Link>
 
-          <RestDayButton workedOutToday={workedOutToday} />
+          <RestDayButton workedOutToday={workedOutToday} isRestDayToday={isRestDayToday} />
         </div>
 
         <div className="space-y-4">
